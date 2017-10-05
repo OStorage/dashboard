@@ -6,7 +6,7 @@ from swiftclient import ClientException
 from horizon import exceptions
 from openstack_dashboard.api import keystone
 from openstack_dashboard.api import swift
-from crystal_dashboard.api import filters as api_filters    
+from crystal_dashboard.api import filters as api_filters
 from crystal_dashboard.api import projects as api_projects
 from crystal_dashboard.api import swift as api_swift
 from crystal_dashboard.api import policies as api_policies
@@ -67,7 +67,7 @@ def get_filter_list(request):
     """
 
     try:
-        response = api_filters.fil_list_filters(request)
+        response = api_filters.list_filters(request)
         if 200 <= response.status_code < 300:
             response_text = response.text
         else:
@@ -106,7 +106,7 @@ def get_dsl_filter_list(request):
     :return: list with dsl filters
     """
     try:
-        response = api_filters.dsl_get_all_filters(request)
+        response = api_filters.list_filters(request)
         if 200 <= response.status_code < 300:
             response_text = response.text
         else:
@@ -119,7 +119,7 @@ def get_dsl_filter_list(request):
     dsl_filters = json.loads(response_text)
     # Iterate dsl filters
     for dsl_filter in dsl_filters:
-        dsl_filters_list.append((dsl_filter['identifier'], dsl_filter['name']))
+        dsl_filters_list.append((dsl_filter['dsl_name'], dsl_filter['dsl_name']))
     return dsl_filters_list
 
 
@@ -217,6 +217,7 @@ def get_project_list(request):
     for project in projects:
         projects_list.append((project.id, project.name))
     return projects_list
+
 
 # Container
 # =========
