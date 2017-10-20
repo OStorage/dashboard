@@ -10,6 +10,7 @@ from crystal_dashboard.api import filters as api_filters
 from crystal_dashboard.api import projects as api_projects
 from crystal_dashboard.api import swift as api_swift
 from crystal_dashboard.api import policies as api_policies
+from crystal_dashboard.api import metrics as api_metrics
 from crystal_dashboard.api import analytics as api_analytics
 
 
@@ -324,3 +325,17 @@ def get_anj_analyzer_list(request):
     for analyzer in analyzers:
         analyzers_list.append((analyzer['id'], analyzer['name']))
     return analyzers_list
+
+
+# Workload Metrics
+# ==============
+def get_activated_workload_metrics_list_choices(request):
+    """
+    Get a tuple of activaded workload metric choices
+
+    :param request: the request which the dashboard is using
+    :return: tuple with activaded workload metric choices
+    """
+
+    workload_metrics_choices = [(obj['name'], obj['name']) for obj in json.loads(api_metrics.get_activated_workload_metrics(request).text)]
+    return ('', 'Select one'), ('Workload Metrics', workload_metrics_choices)
