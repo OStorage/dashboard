@@ -374,6 +374,16 @@ def swift_get_container(request, container_name, with_data=True):
             public_url = swift_endpoint + '/' + parameters
         ts_float = float(headers.get('x-timestamp'))
         timestamp = timeutils.iso8601_from_timestamp(ts_float)
+
+        metadata = ''
+        for header in headers:
+            if header.startswith('x-container-meta-'):
+                key_name = header.replace('x-container-meta-', '').replace('-', ' ').title()
+                value = headers[header]
+                metadata += key_name + '=' + value + ', '
+
+        metadata = metadata[0:-2]
+
     except Exception:
         pass
     container_info = {
@@ -384,7 +394,8 @@ def swift_get_container(request, container_name, with_data=True):
         'data': data,
         'is_public': is_public,
         'public_url': public_url,
-        'storage_policy': headers.get('x-storage-policy')
+        'storage_policy': headers.get('x-storage-policy'),
+        'metadata': metadata,
     }
     return Container(container_info)
 
@@ -400,4 +411,18 @@ def swift_get_project_containers(request, project_id):
     headers['Content-Type'] = "application/json"
 
     r = requests.get(url, headers=headers)
+    return r
+
+
+def swift_update_container_policy(request, project_id, storage_policy_id):
+    token = get_token(request)
+
+    headers = {}
+
+    url = settings.IOSTACK_CONTROLLER_URL + "/swift/" + str(project_id) + "/container/policy"
+
+    headers["X-Auth-Token"] = str(token)
+    headers['Content-Type'] = "application/json"
+
+    r = requests.put(url, json.dumps(storage_policy_id), headers=headers)
     return r

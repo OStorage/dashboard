@@ -10,8 +10,8 @@ from crystal_dashboard.api import filters as api_filters
 from crystal_dashboard.api import projects as api_projects
 from crystal_dashboard.api import swift as api_swift
 from crystal_dashboard.api import policies as api_policies
-from crystal_dashboard.api import metrics as api_metrics
 from crystal_dashboard.api import analytics as api_analytics
+from crystal_dashboard.api import metrics as api_metrics
 
 
 # List Options
@@ -134,7 +134,7 @@ def get_object_type_choices(request):
     :return: tuple with object types
     """
     object_type_list = get_object_type_list(request)
-    return (('', 'None'), ('Object Types', object_type_list)) if len(object_type_list) > 0 else (('', 'None'),)
+    return (('', ''), ('Object Types', object_type_list)) if len(object_type_list) > 0 else (('', 'None'),)
 
 
 def get_object_type_list(request):
@@ -306,8 +306,46 @@ def get_users_list(request, project_id):
     users = json.loads(response_text)
     # Iterate object types
     for user in users:
-        users_list.append((user['id'], user['name']))
+        users_list.append(('user_id:'+user['id'], user['name']))
     return users_list
+
+
+# =========
+# User Groups
+# =========
+def get_groups_list_choices(request, project_id):
+    """
+    Get a tuple of groups choices
+
+    :param request: the request which the dashboard is using
+    :return: tuple with container choices
+    """
+    return ('', 'Select one'), ('Groups', get_groups_list(request, project_id))
+
+
+def get_groups_list(request, project_id):
+    """
+    Get a list of groups
+
+    :param request: the request which the dashboard is using
+    :return: list with containers
+    """
+    try:
+        response = api_projects.get_project_groups(request, project_id)
+        if 200 <= response.status_code < 300:
+            response_text = response.text
+        else:
+            raise ValueError('Unable to get groups')
+    except Exception as exc:
+        response_text = '[]'
+        exceptions.handle(request, _(exc.message))
+
+    groups_list = []
+    groups = json.loads(response_text)
+    # Iterate object types
+    for group in groups:
+        groups_list.append(('group_id:'+group['id'], group['name']))
+    return groups_list
 
 
 # ==============
@@ -349,9 +387,25 @@ def get_storage_policy_list(request, by_attribute):
         storage_policies_list.append((storage_policy[str(by_attribute)], storage_policy['name']))
     return storage_policies_list
 
+# ==============
+# Workload Metrics
+# ==============
 
+def get_activated_workload_metrics_list_choices(request):
+    """
+    Get a tuple of activaded workload metric choices
+
+    :param request: the request which the dashboard is using
+    :return: tuple with activaded workload metric choices
+    """
+
+    workload_metrics_choices = [(obj['name'], obj['name']) for obj in json.loads(api_metrics.get_activated_workload_metrics(request).text)]
+    return ('', 'Select one'), ('Workload Metrics', workload_metrics_choices)
+
+# ==========
 # Analyzers
 # ==========
+
 def get_anj_analyzer_list_choices(request):
     """
     Get a tuple of analyzers
@@ -386,17 +440,3 @@ def get_anj_analyzer_list(request):
         analyzers_list.append((analyzer['id'], analyzer['name']))
     return analyzers_list
 
-
-# ==============
-# Workload Metrics
-# ==============
-def get_activated_workload_metrics_list_choices(request):
-    """
-    Get a tuple of activaded workload metric choices
-
-    :param request: the request which the dashboard is using
-    :return: tuple with activaded workload metric choices
-    """
-
-    workload_metrics_choices = [(obj['name'], obj['name']) for obj in json.loads(api_metrics.get_activated_workload_metrics(request).text)]
-    return ('', 'Select one'), ('Workload Metrics', workload_metrics_choices)
